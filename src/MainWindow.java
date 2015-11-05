@@ -13,6 +13,8 @@ public class MainWindow extends JFrame implements KeyListener
 {
 	Player player = new Player(162);
 	
+	Block[] blocks = new Block[200];
+	
 	JPanel Ground = new JPanel();
 	JPanel GameWindow = new JPanel();
 	
@@ -28,7 +30,7 @@ public class MainWindow extends JFrame implements KeyListener
 					@Override
 					public void run()
 					{
-						UpdatePlayer();
+						UpdateGame();
 					}
 				}, 200, 200);  //Creates a new timer that calls Update() every half second
 		
@@ -63,14 +65,21 @@ public class MainWindow extends JFrame implements KeyListener
 		JLabel ground = new JLabel("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
 		Ground.add(ground);
 		this.add(Ground);
+		
+		//Adds a block at position 98
+		blocks[0] = new Block(98);
+		positions[98].setText(Block.TEXT);
 	}
-	public void UpdatePlayer()
-	{	
+	
+
+	public void UpdateGame()
+	{
 		for (int i = 0; i < 180; i++)  //Resets the board
 		{
 			positions[i].setText("" + i);
 		}
 		
+		//Updates player position
 		if (player.firstJump)
 		{
 			player.firstJump = false;
@@ -99,8 +108,32 @@ public class MainWindow extends JFrame implements KeyListener
 				player.isComingDown = false;
 			}
 		}
-		positions[player.position].setText("O");  // Updates player position
+		positions[player.position].setText("O");
 		
+		//Updates blocks and position
+		for (int i = 0; i < 200; i++)
+		{
+			if (blocks[i] == null)  //If the block is not initiated or null, continue
+			{
+				continue;
+			}
+			else if (!blocks[i].isActive)  //If the block is off screen, set it to null
+			{
+				blocks[i] = null;
+			}
+			else  //Block is active
+			{
+				blocks[i].moveNextPos();
+				if (!blocks[i].isActive)  //Checks if the block sould be offscreen
+				{
+					blocks[i] = null;
+				}
+				else
+				{
+					positions[blocks[i].position].setText(Block.TEXT);
+				}
+			}
+		}	
 	}
 	
 	@Override

@@ -1,4 +1,7 @@
 import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.KeyEvent;
@@ -11,6 +14,10 @@ import java.util.TimerTask;
 
 public class MainWindow extends JFrame implements KeyListener
 {
+	Random randomNumber = new Random();
+	
+	int timeUntilNextGenerate = 0; //Used for creating a gap between blocks
+	
 	Player player = new Player(162);
 	
 	Block[] blocks = new Block[200];
@@ -30,7 +37,9 @@ public class MainWindow extends JFrame implements KeyListener
 					@Override
 					public void run()
 					{
-						UpdateGame();
+						
+						UpdateGame();	
+						GenerateBlocks();
 					}
 				}, 200, 200);  //Creates a new timer that calls Update() every half second
 		
@@ -65,10 +74,50 @@ public class MainWindow extends JFrame implements KeyListener
 		JLabel ground = new JLabel("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
 		Ground.add(ground);
 		this.add(Ground);
+	}
+	
+	public void GenerateBlocks()
+	{
+		if (timeUntilNextGenerate > 0)  //If we still need to wait, decrease the time and continue
+		{
+			timeUntilNextGenerate -= 1;
+			return;
+		}
 		
-		//Adds a block at position 98
-		blocks[0] = new Block(98);
-		positions[98].setText(Block.TEXT);
+		if (randomNumber.nextInt(5) == 0) //20% chance
+		{
+			int blocksToUse = randomNumber.nextInt(3) + 1; //Random number between 1 and 3
+			
+			List<Integer> emptyBlocks = new ArrayList<Integer>(); //Storing the positions of empty blocks
+			
+			int currentBlockChecker = 0; //Variable for current block checking, used for finding empty blocks
+			while (emptyBlocks.size() != blocksToUse)
+			{
+				if (blocks[currentBlockChecker] == null)
+				{
+					System.out.println(currentBlockChecker + " is null");
+					emptyBlocks.add(currentBlockChecker);
+				}
+				else if (!blocks[currentBlockChecker].isActive) //If the block is not in use
+				{
+					System.out.println(currentBlockChecker + " is active: " + blocks[currentBlockChecker].isActive);
+					emptyBlocks.add(currentBlockChecker);  //Holds all the positions of the not used blocks
+				}
+				currentBlockChecker += 1;
+			}
+			
+			int height = 0; //For stacking blocks on top of each other
+			for (int blockPosition : emptyBlocks) //For each empty block position...
+			{
+				System.out.println("Empty block position is: " + blockPosition);
+				blocks[blockPosition] = new Block(179 - (height * 20));
+				blocks[blockPosition].isActive = true;
+				height += 1;
+			}
+			
+			timeUntilNextGenerate = 8; //Forces game to wait at least 8 updates before another generation can happen
+			
+		}
 	}
 	
 
@@ -76,7 +125,7 @@ public class MainWindow extends JFrame implements KeyListener
 	{
 		for (int i = 0; i < 180; i++)  //Resets the board
 		{
-			positions[i].setText("" + i);
+			positions[i].setText("");
 		}
 		
 		//Updates player position
@@ -87,7 +136,7 @@ public class MainWindow extends JFrame implements KeyListener
 		else if (player.isComingDown)
 		{
 			player.position += 20;
-			if (player.position <= 102)
+			if (player.position <= 92           )
 			{
 				player.isComingDown = true;
 			}
@@ -99,7 +148,7 @@ public class MainWindow extends JFrame implements KeyListener
 		else if (!player.isComingDown && player.position != 162)
 		{
 			player.position -= 20;
-			if (player.position <= 102)
+			if (player.position <= 92)
 			{
 				player.isComingDown = true;
 			}
@@ -117,23 +166,31 @@ public class MainWindow extends JFrame implements KeyListener
 			{
 				continue;
 			}
-			else if (!blocks[i].isActive)  //If the block is off screen, set it to null
+			else if (!blocks[i].isActive)  //If the block is off screen, continue
 			{
-				blocks[i] = null;
+				continue;
 			}
 			else  //Block is active
 			{
 				blocks[i].moveNextPos();
-				if (!blocks[i].isActive)  //Checks if the block sould be offscreen
+				if (!blocks[i].isActive)  //Checks if the block should be off-screen
 				{
-					blocks[i] = null;
+					blocks[i].isActive = false;
+					continue;
 				}
 				else
 				{
 					positions[blocks[i].position].setText(Block.TEXT);
-				}
+					
+					//Checks for collision between player and a block
+					if (blocks[i].position == player.position)
+					{
+						System.out.println("You lost!");
+						System.exit(1);
+					}
+				}								
 			}
-		}	
+		}
 	}
 	
 	@Override

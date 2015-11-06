@@ -153,9 +153,15 @@ public class MainWindow extends JFrame implements KeyListener
 			int emptyBlockPosition = -1; //Set to -1 so it raises an error if all blocks are taken;
 			for (int i = 0; i < 50; i++) //Iterate through all the possible blocks
 			{
-				if (blocks[i] == null) //If the block is not in use
+				if (blocks[i] == null) //If the block hasn't been initialized yet
 				{
 					emptyBlockPosition = i;
+					break; //Already found an ampty block, so break out of the loop
+				}
+				if (!blocks[i].isActive) //If the block is not in use
+				{
+					emptyBlockPosition = i;
+					break;
 				}
 			}
 			blocks[emptyBlockPosition] = new Block(157);
@@ -170,13 +176,13 @@ public class MainWindow extends JFrame implements KeyListener
 			int currentBlockChecker = 0; //Variable for current block checking, used for finding empty blocks
 			while (emptyBlocks.size() != blocksToUse)
 			{
-				if (blocks[currentBlockChecker] == null) //If the block is not in use
+				if (blocks[currentBlockChecker] == null) //If the block has not been initialized yet
 				{
-					emptyBlocks.add(currentBlockChecker);
+					emptyBlocks.add(currentBlockChecker); 
 				}
 				else if (!blocks[currentBlockChecker].isActive) //If the block is not in use
 				{
-					emptyBlocks.add(currentBlockChecker);  //Holds all the positions of the not used blocks
+					emptyBlocks.add(currentBlockChecker);
 				}
 				currentBlockChecker += 1;
 			}
@@ -195,17 +201,21 @@ public class MainWindow extends JFrame implements KeyListener
 			int emptyBlockPosition = -1;
 			for (int i = 0; i < 50; i++) //Iterate through all the possible blocks
 			{
-				if (blocks[i] == null) //If the block is not in use
+				if (blocks[i] == null)
 				{
 					emptyBlockPosition = i;
+					break;
+				}
+				if (!blocks[i].isActive) //If the block is not in use
+				{
+					emptyBlockPosition = i;
+					break;
 				}
 			}
 			blocks[emptyBlockPosition] = new Block(159);
 			timeUntilNextGenerate += 2; //Makes the game wait at least 2 ticks before it can generate more structures
 		}
 	}
-
-
 
 	public void UpdateGame()
 	{
@@ -257,15 +267,14 @@ public class MainWindow extends JFrame implements KeyListener
 			}
 			else if (!blocks[i].isActive)  //If the block is off screen, continue
 			{
-				blocks[i] = null; //Set the block to null so we can reuse it later
 				continue;
 			}
 			else  //Block is active
 			{
-				blocks[i].moveNextPos();
+				blocks[i].moveNextPos(); //Move the block to the next position
+				
 				if (!blocks[i].isActive)  //Checks if the block should be off-screen
 				{
-					blocks[i].isActive = false;
 					continue;
 				}
 				else

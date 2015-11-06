@@ -15,27 +15,27 @@ import java.util.TimerTask;
 public class MainWindow extends JFrame implements KeyListener
 {
 	Timer gameTimer = new Timer();
-	
+
 	Random randomNumber = new Random();
-	
+
 	int timeUntilNextGenerate = 0; //Used for creating a gap between blocks
 	int score = 0; //Currents score, adds for every 5 game ticks
 	int ticksTillNextScore = 5; //Used to measure every 5 game ticks
 	int gameTickSpeed = 200; //Default value is 200ms, decreases by 10 ms every 20 game ticks
 	int ticksTillNextSpeed = 20; //Counts 20 game ticks to increase update speed
-	
+
 	Player player = new Player(162);
-	
-	Block[] blocks = new Block[200];
-	
+
+	Block[] blocks = new Block[50];
+
 	JPanel Ground = new JPanel();
 	JPanel GameWindow = new JPanel();
-	
+
 	JLabel scoreLabel = new JLabel("0");
-	
+
 	JLabel[] positions = new JLabel[181];
-	
-	
+
+
 	public MainWindow()
 	{
 		//Adds the timer to call Update()
@@ -49,23 +49,23 @@ public class MainWindow extends JFrame implements KeyListener
 				GenerateBlocks(); //Creates new blocks
 			}
 		}, 200, 200);  //Creates a new timer that calls Update() every half second
-		
+
 		this.addKeyListener(this);
 		this.setLayout(new BorderLayout()); 
-				
+
 		initGame();
-		
+
 		this.add(GameWindow, BorderLayout.CENTER);
 		this.add(Ground, BorderLayout.SOUTH);
-		
+
 		//this.setSize(800, 400);
 		this.setTitle("A real game!");
 		this.pack();
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		
+
 		this.setVisible(true);
 	}
-	
+
 	public void updateTimer()
 	{
 		gameTimer.cancel();
@@ -82,8 +82,8 @@ public class MainWindow extends JFrame implements KeyListener
 			}
 		}, gameTickSpeed, gameTickSpeed);
 	}
-	
-	
+
+
 	public void initGame()
 	{
 		//Initializes the game window
@@ -93,22 +93,22 @@ public class MainWindow extends JFrame implements KeyListener
 			positions[i] = new JLabel("" + i);
 			GameWindow.add(positions[i]);
 		}
-		
+
 		//Adds the score counter in the top right
 		{
 			positions[19].setText("0");
 		}
-		
+
 		//Adds the player
 		positions[player.position].setText("O");
-		
+
 		//Adds the static ground
 		JLabel ground = new JLabel("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
 		Ground.add(ground);
 		this.add(Ground);
-		
+
 	}
-	
+
 	public void DoGameTick()
 	{
 		if (ticksTillNextScore == 0) //We add one to score
@@ -121,7 +121,7 @@ public class MainWindow extends JFrame implements KeyListener
 		{
 			ticksTillNextScore -= 1; //If it is not 0, decrease it by one
 		}
-		
+
 		if (gameTickSpeed <= 80) //Can't keep up if it updates every 80 milliseconds
 		{
 			return;
@@ -137,7 +137,7 @@ public class MainWindow extends JFrame implements KeyListener
 			ticksTillNextSpeed -= 1;
 		}		
 	}
-	
+
 	public void GenerateBlocks()
 	{
 		if (timeUntilNextGenerate > 0)  //If we still need to wait, decrease the time and continue
@@ -146,39 +146,66 @@ public class MainWindow extends JFrame implements KeyListener
 			return;
 		}
 		
-		if (randomNumber.nextInt(5) == 0) //20% chance
+		//Code below generates structures in a "float - tower - float" format
+		
+		if (randomNumber.nextInt(3) == 0) //33% chance to generate a floating structure
+		{
+			int emptyBlockPosition = -1; //Set to -1 so it raises an error if all blocks are taken;
+			for (int i = 0; i < 50; i++) //Iterate through all the possible blocks
+			{
+				if (blocks[i] == null) //If the block is not in use
+				{
+					emptyBlockPosition = i;
+				}
+			}
+			blocks[emptyBlockPosition] = new Block(157);
+			timeUntilNextGenerate += 1; //Makes the game wait at least 1 more tick to generate the next set of structures
+		}
+		if (randomNumber.nextInt(5) == 0) //20% chance to generate a tower structure
 		{
 			int blocksToUse = randomNumber.nextInt(3) + 1; //Random number between 1 and 3
-			
+
 			List<Integer> emptyBlocks = new ArrayList<Integer>(); //Storing the positions of empty blocks
-			
+
 			int currentBlockChecker = 0; //Variable for current block checking, used for finding empty blocks
 			while (emptyBlocks.size() != blocksToUse)
 			{
-				if (blocks[currentBlockChecker] == null)
+				if (blocks[currentBlockChecker] == null) //If the block is not in use
 				{
 					emptyBlocks.add(currentBlockChecker);
 				}
 				else if (!blocks[currentBlockChecker].isActive) //If the block is not in use
-				{;
+				{
 					emptyBlocks.add(currentBlockChecker);  //Holds all the positions of the not used blocks
 				}
 				currentBlockChecker += 1;
 			}
-			
+
 			int height = 0; //For stacking blocks on top of each other
 			for (int blockPosition : emptyBlocks) //For each empty block position...
 			{
-				blocks[blockPosition] = new Block(179 - (height * 20));
+				blocks[blockPosition] = new Block(178 - (height * 20));
 				blocks[blockPosition].isActive = true;
 				height += 1;
 			}
-			
-			timeUntilNextGenerate = 8; //Forces game to wait at least 8 updates before another generation can happen
-			
+			timeUntilNextGenerate += 8; //Makes the game wait at least 8 more ticks before it can generate more structures
+		}
+		if (randomNumber.nextInt(3) == 0) //33% chance to generate a "float" structure
+		{
+			int emptyBlockPosition = -1;
+			for (int i = 0; i < 50; i++) //Iterate through all the possible blocks
+			{
+				if (blocks[i] == null) //If the block is not in use
+				{
+					emptyBlockPosition = i;
+				}
+			}
+			blocks[emptyBlockPosition] = new Block(159);
+			timeUntilNextGenerate += 2; //Makes the game wait at least 2 ticks before it can generate more structures
 		}
 	}
-	
+
+
 
 	public void UpdateGame()
 	{
@@ -186,9 +213,10 @@ public class MainWindow extends JFrame implements KeyListener
 		{
 			positions[i].setText("");
 		}
+
 		//Updates the score
 		positions[19].setText("" + score); //Sets the top right to score
-		
+
 		//Updates player position
 		if (player.firstJump)
 		{
@@ -219,9 +247,9 @@ public class MainWindow extends JFrame implements KeyListener
 			}
 		}
 		positions[player.position].setText("O");
-		
+
 		//Updates blocks and position
-		for (int i = 0; i < 200; i++)
+		for (int i = 0; i < 50; i++)
 		{
 			if (blocks[i] == null)  //If the block is not initiated or null, continue
 			{
@@ -229,6 +257,7 @@ public class MainWindow extends JFrame implements KeyListener
 			}
 			else if (!blocks[i].isActive)  //If the block is off screen, continue
 			{
+				blocks[i] = null; //Set the block to null so we can reuse it later
 				continue;
 			}
 			else  //Block is active
@@ -242,7 +271,7 @@ public class MainWindow extends JFrame implements KeyListener
 				else
 				{
 					positions[blocks[i].position].setText(Block.TEXT);
-					
+
 					//Checks for collision between player and a block
 					if (blocks[i].position == player.position)
 					{
@@ -254,7 +283,7 @@ public class MainWindow extends JFrame implements KeyListener
 			}
 		}
 	}
-	
+
 	@Override
 	public void keyPressed(KeyEvent e) 
 	{
@@ -263,12 +292,12 @@ public class MainWindow extends JFrame implements KeyListener
 			player.Jump();			
 		}
 	}
-	
+
 	@Override
 	public void keyReleased(KeyEvent e) 
 	{		
 	}
-	
+
 	@Override
 	public void keyTyped(KeyEvent e) 
 	{		
